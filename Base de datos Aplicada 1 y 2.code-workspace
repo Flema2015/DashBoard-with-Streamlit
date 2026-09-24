@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../Graphviz-16.0.0-win64"
+		}
+	],
+	"settings": {}
+}

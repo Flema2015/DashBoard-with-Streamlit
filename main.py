@@ -9,26 +9,29 @@ DB_PATH = "mesa_ayuda.db"
 COLOR_SEMAFORO = {"🟢": "#1D9E75", "🟡": "#BA7517", "🔴": "#E24B4A"}
 
 
+def leyenda_semaforo():
+    """Referencia de qué significa cada color. Se muestra en TODAS las pantallas del tablero."""
+    st.caption("🟢 Dentro de SLA · 🟡 Por vencer (menos del 20% del tiempo restante) · 🔴 Vencido / fuera de SLA")
+
+
 # ------------------------------------------------------
 # Lógica de validación (separada de la interfaz)
 # ------------------------------------------------------
 def validar_credenciales(username, password):
-    conn = sqlite3.connect(DB_PATH) #Abre el archivo de la base de datos.
-    cursor = conn.cursor() #Cursor es el objeto que permite ejecutar consultas SQL.
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
     cursor.execute(
         "SELECT password_hash, nombre_completo FROM usuarios_sistema WHERE username = ?",
         (username,),
-    ) # Ejecuta la consulta SQL para obtener el hash de la contraseña y el nombre completo del usuario con el nombre de usuario proporcionado.
-    #Basicamente dice "anda a la tabla usuario_sistema, busca la fila donde el username sea igual al que me pasaste y traeme el password_hash y el nombre_completo de esa fila"
-    #NOTE: el "?" es para indicar un espacio en blanco que se rellena con el valor real.
-    resultado = cursor.fetchone() #Ejecuta la consulta y devuelve la primera fila del resultado como una tupla (password_hash, nombre_completo). Si no hay resultados, devuelve None.
-    conn.close()#cierra el archivo.
-    if resultado is None: #si resultado none, significa que no hay un usuario con ese nombre.
+    )
+    resultado = cursor.fetchone()
+    conn.close()
+
+    if resultado is None:
         return False, None
 
-    password_hash_guardado, nombre_completo = resultado #Desempaqueta la tupla en dos variables: password_hash_guardado y nombre_completo.
-    coincide = bcrypt.checkpw(password.encode(), password_hash_guardado.encode()) #Compara la contraseña ingresada (password) con el hash almacenado en la base de datos +
-    #(password_hash_guardado) usando bcrypt. Devuelve True si coinciden, False si no.
+    password_hash_guardado, nombre_completo = resultado
+    coincide = bcrypt.checkpw(password.encode(), password_hash_guardado.encode())
 
     return (True, nombre_completo) if coincide else (False, None)
 
@@ -40,8 +43,6 @@ def pantalla_login():
     st.title("Mesa de Ayuda IT")
     st.subheader("Iniciar sesión")
 
-    # st.form agrupa los campos: Streamlit NO reejecuta el script en cada
-    # letra que tipeás, solo cuando apretás el botón de submit.
     with st.form("login_form"):
         username = st.text_input("Usuario")
         password = st.text_input("Contraseña", type="password")
@@ -52,7 +53,7 @@ def pantalla_login():
         if valido:
             st.session_state.logueado = True
             st.session_state.nombre_usuario = nombre
-            st.rerun()  # fuerza un re-render ya logueado
+            st.rerun()
         else:
             st.error("Usuario o contraseña incorrectos")
 
@@ -80,10 +81,39 @@ DATOS_TECNICOS = {
     ],
 }
 
+# Cada ticket ahora incluye: quién lo reportó (usuario), cuándo se abrió
+# y cuándo se cerró (o "-" si sigue abierto).
 DATOS_TICKETS = {
     "Marcos Ibáñez": [
-        {"titulo": "Error al iniciar sesión", "prioridad": "alta", "estado": "abierto", "semaforo": "🔴"},
-        {"titulo": "No enciende la PC", "prioridad": "alta", "estado": "cerrado", "semaforo": "🟢"},
+        {
+            "titulo": "Error al iniciar sesión",
+            "prioridad": "alta",
+            "estado": "abierto",
+            "semaforo": "🔴",
+            "usuario": "Carla Gómez",
+            "fecha_apertura": "2026-08-29 07:00",
+            "fecha_cierre": "-",
+        },
+        {
+            "titulo": "No enciende la PC",
+            "prioridad": "alta",
+            "estado": "cerrado",
+            "semaforo": "🟢",
+            "usuario": "Diego Torres",
+            "fecha_apertura": "2026-08-20 09:00",
+            "fecha_cierre": "2026-08-20 14:00",
+        },
+    ],
+    "Julieta Fernández": [
+        {
+            "titulo": "Impresora de red no responde",
+            "prioridad": "media",
+            "estado": "abierto",
+            "semaforo": "🟡",
+            "usuario": "Carla Gómez",
+            "fecha_apertura": "2026-08-28 08:00",
+            "fecha_cierre": "-",
+        },
     ],
 }
 
@@ -94,7 +124,7 @@ DATOS_TICKETS = {
 def nivel1_departamentos():
     st.title(f"Mesa de Ayuda — Bienvenido, {st.session_state.nombre_usuario} 👋")
     st.subheader("Nivel 1: Departamentos")
-    st.caption("🟢 Dentro de SLA · 🟡 Por vencer · 🔴 Vencido")
+    leyenda_semaforo()
 
     for depto in DATOS_DEPARTAMENTOS:
         col1, col2, col3, col4 = st.columns([3, 2, 1, 2])
@@ -129,13 +159,14 @@ def nivel1_departamentos():
 def nivel2_tecnicos():
     depto = st.session_state.depto_elegido
     st.title(f"Nivel 2: Técnicos — {depto}")
-    st.caption("🟢 Dentro de SLA · 🟡 Por vencer · 🔴 Vencido")
+    leyenda_semaforo()
 
     if st.button("← Volver a departamentos"):
         st.session_state.nivel = 1
         st.rerun()
 
-    for tec in DATOS_TECNICOS.get(depto, []):
+    tecnicos_depto = DATOS_TECNICOS.get(depto, [])
+    for tec in tecnicos_depto:
         col1, col2, col3, col4 = st.columns([3, 2, 1, 2])
         col1.write(tec["nombre"])
         col2.write(f"{tec['tickets']} tickets")
@@ -145,7 +176,6 @@ def nivel2_tecnicos():
             st.session_state.tecnico_elegido = tec["nombre"]
             st.rerun()
 
-    tecnicos_depto = DATOS_TECNICOS.get(depto, [])
     if tecnicos_depto:
         fig = px.bar(
             tecnicos_depto,
@@ -166,6 +196,7 @@ def nivel2_tecnicos():
 def nivel3_detalle():
     tecnico = st.session_state.tecnico_elegido
     st.title(f"Nivel 3: Tickets de {tecnico}")
+    leyenda_semaforo()
 
     if st.button("← Volver a técnicos"):
         st.session_state.nivel = 2
@@ -174,12 +205,18 @@ def nivel3_detalle():
     tickets = DATOS_TICKETS.get(tecnico, [])
     if not tickets:
         st.info("Sin datos de ejemplo cargados para este técnico todavía.")
+
     for t in tickets:
-        col1, col2, col3, col4 = st.columns([4, 2, 2, 1])
-        col1.write(t["titulo"])
-        col2.write(t["prioridad"])
-        col3.write(t["estado"])
-        col4.write(t["semaforo"])
+        with st.container(border=True):
+            col1, col2, col3 = st.columns([3, 1, 1])
+            col1.markdown(f"**{t['titulo']}**")
+            col2.write(f"Prioridad: {t['prioridad']}")
+            col3.write(f"{t['semaforo']} {t['estado']}")
+
+            col4, col5, col6 = st.columns(3)
+            col4.write(f"👤 Reportado por: {t['usuario']}")
+            col5.write(f"🗓️ Apertura: {t['fecha_apertura']}")
+            col6.write(f"✅ Cierre: {t['fecha_cierre']}")
 
     if tickets:
         fig = px.pie(tickets, names="prioridad", title="Distribución por prioridad")
