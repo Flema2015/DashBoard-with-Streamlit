@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import hashlib
 import bcrypt
 import pandas as pd
 
@@ -111,6 +112,11 @@ def validar_credenciales(username: str, password: str) -> tuple[bool, str | None
 
     password_hash_guardado = fila["password_hash"]
     rol = fila["rol"]
+
+    # Soporte para SHA-256 (seed estándar) y bcrypt
+    sha_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    if password_hash_guardado == sha_hash:
+        return True, rol
 
     try:
         coincide = bcrypt.checkpw(password.encode("utf-8"), password_hash_guardado.encode("utf-8"))
@@ -353,7 +359,7 @@ def obtener_tickets_por_tecnico(tecnico_id: int) -> pd.DataFrame:
         t.estado,
         t.sla_horas,
         t.fecha_apertura,
-        t.fecha_cierre,
+        COALESCE(t.fecha_cierre, 'En curso') AS fecha_cierre,
         u.id AS usuario_id,
         u.nombre AS solicitante,
         tec.id AS tecnico_id,
