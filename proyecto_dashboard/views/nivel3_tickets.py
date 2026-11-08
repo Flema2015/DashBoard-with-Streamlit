@@ -9,13 +9,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from config import (
-    COLOR_RED,
-    COLOR_AMBER,
-    COLOR_PRIMARY,
     COLOR_CYAN,
     COLOR_GREEN,
     COLOR_GRID,
-    COLOR_CRITICAL,
+    COLOR_PRIORIDAD,
 )
 from database.queries import (
     obtener_tickets_por_tecnico,
@@ -140,12 +137,7 @@ def render_nivel3_view():
                 values="cantidad",
                 hole=0.55,
                 color="prioridad",
-                color_discrete_map={
-                    "critica": COLOR_CRITICAL,
-                    "alta": COLOR_RED,
-                    "media": COLOR_AMBER,
-                    "baja": COLOR_PRIMARY,
-                },
+                color_discrete_map=COLOR_PRIORIDAD,
             )
             fig_prio.update_traces(
                 textposition="inside",

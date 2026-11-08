@@ -148,16 +148,6 @@ def obtener_metricas_departamentos() -> pd.DataFrame:
     return df
 
 
-def obtener_departamento_por_id(departamento_id: int) -> dict | None:
-    """Retorna los datos de un departamento específico."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre FROM departamentos WHERE id = ?", (departamento_id,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-
 def obtener_tecnicos_por_departamento(departamento_id: int) -> pd.DataFrame:
     """
     Nivel 2: Técnicos por Departamento
@@ -201,21 +191,6 @@ def obtener_tecnicos_por_departamento(departamento_id: int) -> pd.DataFrame:
     df = pd.read_sql_query(sql, conn, params=(departamento_id,))
     conn.close()
     return df
-
-
-def obtener_tecnico_por_id(tecnico_id: int) -> dict | None:
-    """Retorna los datos de un técnico específico."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT tec.id, tec.nombre, tec.departamento_id, d.nombre AS departamento_nombre
-        FROM tecnicos tec
-        JOIN departamentos d ON d.id = tec.departamento_id
-        WHERE tec.id = ?
-    """, (tecnico_id,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
 
 
 def obtener_tickets_por_tecnico(tecnico_id: int) -> pd.DataFrame:
@@ -313,46 +288,4 @@ def obtener_distribucion_estado_tecnico(tecnico_id: int) -> pd.DataFrame:
     conn.close()
     return df
 
-
-def crear_usuario(username: str, password: str, rol: str = "Técnico") -> bool:
-    """Registra un nuevo usuario en la base de datos con contraseña hasheada y rol."""
-    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO usuarios_sistema (username, password_hash, rol) VALUES (?, ?, ?)",
-            (username.strip(), password_hash, rol.strip()),
-        )
-        conn.commit()
-        return True
-    except Exception:
-        return False
-    finally:
-        conn.close()
-
-
-def cambiar_password(username: str, password_nueva: str) -> bool:
-    """Actualiza la contraseña de un usuario existente."""
-    password_hash = bcrypt.hashpw(password_nueva.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE usuarios_sistema SET password_hash = ? WHERE LOWER(username) = LOWER(?)",
-        (password_hash, username.strip()),
-    )
-    conn.commit()
-    filas = cursor.rowcount
-    conn.close()
-    return filas > 0
-
-
-def listar_usuarios() -> list[dict]:
-    """Retorna la lista de usuarios del sistema con sus roles formales."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, username, rol FROM usuarios_sistema ORDER BY id ASC")
-    filas = [dict(r) for r in cursor.fetchall()]
-    conn.close()
-    return filas
 

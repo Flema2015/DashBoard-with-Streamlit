@@ -14,14 +14,14 @@ Aplicacion corporativa de Mesa de Ayuda y Gestion de Incidencias TI con navegaci
 
 2. **Instalar dependencias:**
    ```cmd
-   pip install streamlit bcrypt plotly pandas
+   pip install -r requirements.txt
    ```
 
 3. **Iniciar la aplicacion:**
    ```cmd
    streamlit run app.py
    ```
-   *(Tambien ejecutable con `streamlit run main.py` o `streamlit run proyecto_dashboard/app.py`)*
+   *(Tambien ejecutable directamente con `streamlit run proyecto_dashboard/app.py`)*
 
 ---
 

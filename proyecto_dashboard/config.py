@@ -22,25 +22,9 @@ COLOR_GREEN = "#059669"         # Verde esmeralda (Resueltos / Dentro de SLA)
 COLOR_RED = "#DC2626"           # Rojo coral (Vencidos / Fuera de SLA)
 COLOR_AMBER = "#D97706"         # Naranja / Amarillo (Por vencer / Advertencia)
 COLOR_CRITICAL = "#7F1D1D"      # Rojo oscuro / Prioridad crítica
-COLOR_DARK = "#1E293B"          # Gris pizarra oscuro (Cabecera y contrastes)
-COLOR_CARD_BG = "#FFFFFF"       # Blanco puro para tarjetas
 COLOR_GRID = "rgba(128,128,128,0.2)"  # Grilla punteada tenue requerida
 
-# Mapeo de Colores para Semáforo de SLA
-COLOR_SEMAFORO = {
-    "VERDE": COLOR_GREEN,
-    "AMARILLO": COLOR_AMBER,
-    "ROJO": COLOR_RED,
-}
-
-# Textos Formales de Referencia de SLA
-SLA_DESCRIPCIONES = {
-    "VERDE": "Dentro de SLA (Situación normal / favorable)",
-    "AMARILLO": "Por vencer — menos del 20% del tiempo de SLA restante (Advertencia)",
-    "ROJO": "Vencido / Fuera de SLA (Situación crítica)",
-}
-
-# Mapeo de Colores para Prioridades
+# Mapeo de Colores para Prioridades de Tickets
 COLOR_PRIORIDAD = {
     "critica": COLOR_CRITICAL,
     "alta": COLOR_RED,
